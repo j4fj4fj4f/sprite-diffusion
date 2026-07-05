@@ -21,31 +21,31 @@ The project starts with unconditional sprite generation before gradually introdu
 
 ### Phase 1 — Project Setup
 - [x] Create repository
-- [ ] Set up Python environment
-- [ ] Create project structure
-- [ ] Add configuration system
+- [x] Set up Python environment
+- [x] Create project structure
+- [x] Add configuration system
 
 ### Phase 2 — Dataset
-- [ ] Collect 64×64 sprite dataset
-- [ ] Remove duplicates
-- [ ] Verify image sizes
+- [x] Collect 64×64 sprite dataset
+- [x] Remove duplicates
+- [x] Verify image sizes
 - [ ] Implement preprocessing
 - [ ] Implement augmentation
-- [ ] Build PyTorch Dataset
+- [x] Build PyTorch Dataset
 
 ### Phase 3 — Diffusion Model
-- [ ] Implement U-Net
-- [ ] Implement forward diffusion
-- [ ] Implement noise scheduler
-- [ ] Implement reverse diffusion
-- [ ] Implement sampling
+- [x] Implement U-Net
+- [x] Implement forward diffusion
+- [x] Implement noise scheduler
+- [x] Implement reverse diffusion
+- [x] Implement sampling
 
 ### Phase 4 — Training
-- [ ] Training loop
+- [x] Training loop
 - [ ] TensorBoard logging
-- [ ] Checkpoint saving
-- [ ] EMA
-- [ ] Validation sampling
+- [x] Checkpoint saving
+- [x] EMA
+- [x] Validation sampling
 
 ### Phase 5 — Conditional Generation
 - [ ] Class conditioning
