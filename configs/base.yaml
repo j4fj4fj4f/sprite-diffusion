@@ -1,0 +1,25 @@
+root_dir: "H:/CodeNStuff/Diffusion/sprite-diffusion"
+
+data:
+  #raw_dir: data/raw/sprites
+  raw_dir: data/raw/sprites_human
+
+image:
+  size: 64
+  channels: 4
+
+experiment:
+  name: "simpleUNet_v2
+
+training:
+  batch_size: 16
+  num_workers: 2
+  shuffle: true
+  epochs: 120
+  save_interval: 4
+
+model:
+  base_channels: 64
+
+optim:
+  lr: 0.0001

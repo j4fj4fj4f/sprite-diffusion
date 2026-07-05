@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environment
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# PyTorch / ML outputs
+checkpoints/
+outputs/
+logs/
+models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+
+# Large data (IMPORTANT)
+data/downloaded
+data/raw/
+data/processed/
