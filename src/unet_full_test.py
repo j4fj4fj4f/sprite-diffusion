@@ -9,7 +9,8 @@ from src.model.unet import Block, SinusoidalPositionEmbeddings,UNet
 # 1. Sinusoidal embedding test
 # -----------------------------
 def test_sinusoidal():
-    dim = 64
+    # dim = 64 # v1
+    dim = 128
     t = torch.arange(10).float()  # [T]
 
     emb_layer = SinusoidalPositionEmbeddings(dim)
@@ -27,7 +28,8 @@ def test_sinusoidal():
 # 2. Time MLP test
 # -----------------------------
 def test_time_mlp():
-    base = 64
+    # base = 64 # v1
+    base = 96
     t = torch.arange(10).float()
 
     time_mlp = nn.Sequential(

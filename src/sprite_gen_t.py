@@ -86,12 +86,13 @@ if __name__ == "__main__":
 
     # load model
     model = UNet().to(device)
-    epoch = 116
+    epoch = "best"
     checkpoint_path = Path("checkpoints") / version / f"epoch_{epoch}.pth"
     checkpoint_path = Path("checkpoints") / version / "last.pth"
+    checkpoint_path = Path("checkpoints") / version / "best.pth"
 
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    model.load_state_dict(checkpoint)
+    model.load_state_dict(checkpoint["ema"])
 
     diffusion = Diffusion(timesteps=1000, device=device)
 

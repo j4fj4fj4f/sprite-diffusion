@@ -35,9 +35,10 @@ if __name__ == "__main__":
     model = UNet().to(device)
 
     # epoch = cfg["training"]["epochs"] - 1
-    epoch = 105
+    epoch = "best"
     checkpoint_path = Path("checkpoints") / version / f"epoch_{epoch}.pth"
     checkpoint_path = Path("checkpoints") / version / "last.pth"
+    checkpoint_path = Path("checkpoints") / version / "best.pth"
     checkpoint = torch.load(
         checkpoint_path,
         map_location=device
@@ -58,7 +59,7 @@ if __name__ == "__main__":
     sprite_dir = Path("checkpoints") / version / f"sprites_{epoch}"
     print(sprite_dir)
     sprite_dir.mkdir(parents=True, exist_ok=True)
-    for i in range(5):
+    for i in range(15):
         samples = sample(model, diffusion, device, n=4)
 
         save_image(samples, Path(sprite_dir / f"i_{i}generated.png"), nrow=2)

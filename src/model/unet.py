@@ -33,22 +33,34 @@ class Block(nn.Module):
 
         self.time_proj = nn.Linear(time_dim, out_ch)
 
+        # residuals Identiy if out=in else 1c1 convolution to match shapes
+        self.res_conv = nn.Conv2d(in_ch, out_ch, 1) if in_ch != out_ch else nn.Identity()
+
     def forward(self, x, t):
+        identity = self.res_conv(x)
+
         h = self.conv1(x)
         h = self.norm1(h)
         h = self.act(h)
 
+        # time embedding injection
         t_emb = self.time_proj(t)[:, :, None, None]
         h = h + t_emb
 
         h = self.conv2(h)
         h = self.norm2(h)
+
+        # residuals
+        h = h + identity
         h = self.act(h)
 
         return h
     
 class UNet(nn.Module):
-    def __init__(self, in_channels=4, base=64, time_dim=64):
+    ##############
+    # v1 values base = 64, time_dim = 64
+    ##############
+    def __init__(self, in_channels=4, base=96, time_dim=128):
         super().__init__()
 
         # time embedding
@@ -64,13 +76,14 @@ class UNet(nn.Module):
         self.conv2 = Block(base, base * 2, time_dim)
 
         # bottleneck
-        self.bottleneck = Block(base * 2, base * 2, time_dim)
+        self.bottleneck1 = Block(base * 2, base * 3, time_dim)
+        self.bottleneck2 = Block(base * 3, base * 2, time_dim)
 
         # decoder
         self.up = nn.Upsample(scale_factor=2)
 
         self.conv3 = Block(base * 2 + base * 2, base, time_dim)
-        self.conv4 = Block(base + base, base, time_dim)
+        self.conv4 = Block(base * 2, base, time_dim)
 
         # output
         self.out = nn.Conv2d(base, in_channels, 1)
@@ -87,7 +100,9 @@ class UNet(nn.Module):
         x2 = self.conv2(self.pool(x1), t)  # 32x32
 
         # bottleneck
-        x3 = self.bottleneck(self.pool(x2), t)  # 16x16
+        x3 = self.pool(x2)
+        x3 = self.bottleneck1(x3, t)  # 16x16
+        x3 = self.bottleneck2(x3, t)  # 16x16
 
         # decoder stage 1
         x = self.up(x3)  # 32x32
@@ -102,3 +117,4 @@ class UNet(nn.Module):
         x = self.conv4(x, t) 
 
         return self.out(x)
+    
