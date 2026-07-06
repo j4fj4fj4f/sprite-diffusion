@@ -9,13 +9,13 @@ image:
   channels: 4
 
 experiment:
-  name: "simpleUNet_v3"
+  name: "simpleUNet_v3_attn"
 
 training:
   batch_size: 16
   num_workers: 2
   shuffle: true
-  epochs: 120
+  epochs: 400
   save_interval: 4
 
 model:

@@ -8,6 +8,7 @@ from src.model.unet import UNet
 from src.model.diffusion import Diffusion
 from src.model.ema import EMA
 
+from pathlib import Path
 from tqdm import tqdm
 from pathlib import Path
 
@@ -26,6 +27,13 @@ def train():
     # model
     model = UNet().to(device)
     optimizer = optim.Adam(model.parameters(), lr=cfg["optim"]["lr"])
+
+    ##### try loading an earlier version
+    version = cfg['experiment']['name']
+    checkpoint_path = checkpoint_dir / "best.pth"
+    checkpoint = torch.load(checkpoint_path)
+    model.load_state_dict(checkpoint["model"])
+    optimizer.load_state_dict(checkpoint["optimizer"])
 
     #EMA
     ema = EMA(model,decay = 0.98)
@@ -69,30 +77,35 @@ def train():
 
             if i % 10 ==0:
                 pbar.set_postfix(loss=loss_value)
-
+            if i % 25 ==0:
+                pbar.set_postfix(loss=loss_value)
             if i % 50 == 0:
                 print(f"{version} Epoch {epoch} Step {i} Loss {loss.item():.4f}")
-        if loss.item() < best:
+        if loss.item() < best and epoch > 85:
             torch.save(
                 {
                     "model": model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
                     "ema":ema.ema_model.state_dict()
                     },checkpoint_dir / f"best.pth")
-            print(f"Saved checkpoint for epoch {epoch}")
+            print(f"Saved checkpoint for epoch {epoch} as best")
             best = loss.item()
-        if loss.item() < 0.009: #conditioned on loss
+        if loss.item() < 0.005: #conditioned on loss
             torch.save(
                 {
                     "model": model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
                     "ema":ema.ema_model.state_dict()
                     },checkpoint_dir / f"epoch_{epoch}.pth")
-            print(f"Saved checkpoint for epoch {epoch}")
+            print(f"Saved checkpoint for epoch {epoch} loss = {loss.item():.4f}")
     torch.save(
             {
                 "model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
                 "ema":ema.ema_model.state_dict()
                 },checkpoint_dir / f"last.pth")
     print(f"Saved checkpoint for epoch {epoch}")
+
         # if ((epoch + 1) % cfg["training"]["save_interval"]) == 0:
         #     torch.save(
         #         model.state_dict(),

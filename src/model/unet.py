@@ -56,6 +56,41 @@ class Block(nn.Module):
 
         return h
     
+class SelfAttention(nn.Module):
+    def __init__(self,channels):
+        super().__init__()
+        self.channels = channels
+
+        self.norm = nn.GroupNorm(8,channels)
+
+        self.q = nn.Conv2d(channels,channels,1)
+        self.k = nn.Conv2d(channels,channels,1)
+        self.v = nn.Conv2d(channels,channels,1)
+
+        self.proj = nn.Conv2d(channels,channels,1)
+
+    def forward(self, x):
+        B,C,H,W = x.shape
+
+        h = self.norm(x)
+
+        q = self.q(h)
+        k = self.k(h)
+        v = self.v(h)
+
+        q = q.view(B,C,H*W).transpose(1,2) # B,C,H,W -> B,C,HW -> B,HW,C
+        k = k.view(B,C,H*W)                #                   -> B,C,HW
+        v = v.view(B,C,H*W).transpose(1,2) #                   -> B,HW,C
+
+        attn = torch.bmm(q,k) #B,HW,C * B,C,HW -> B,HW,HW
+        attn = F.softmax(attn,dim=1)
+
+        out = torch.bmm(attn,v) ##B,HW,HW * B,HW,C -> B,HW,C
+        out = out.transpose(1,2).view(B,C,H,W) #B,HW,C->B,C,HW->B,C,H,W
+
+        out = self.proj(out) # 1d conv
+
+        return out + x #residual
 class UNet(nn.Module):
     ##############
     # v1 values base = 64, time_dim = 64
@@ -78,6 +113,9 @@ class UNet(nn.Module):
         # bottleneck
         self.bottleneck1 = Block(base * 2, base * 3, time_dim)
         self.bottleneck2 = Block(base * 3, base * 2, time_dim)
+
+        #attention
+        self.attn = SelfAttention(base*2)
 
         # decoder
         self.up = nn.Upsample(scale_factor=2)
@@ -103,6 +141,9 @@ class UNet(nn.Module):
         x3 = self.pool(x2)
         x3 = self.bottleneck1(x3, t)  # 16x16
         x3 = self.bottleneck2(x3, t)  # 16x16
+
+        #attention
+        x3 = self.attn(x3)
 
         # decoder stage 1
         x = self.up(x3)  # 32x32

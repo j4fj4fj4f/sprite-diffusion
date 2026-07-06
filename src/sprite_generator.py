@@ -43,23 +43,20 @@ if __name__ == "__main__":
         checkpoint_path,
         map_location=device
     )
-    
+
     EMA = True
-    NONEMA = False
-    if EMA == False and NONEMA == False:
-        model.load_state_dict(checkpoint)
-    if EMA == True and NONEMA == False:
+    if EMA == True :
         model.load_state_dict(checkpoint["ema"])
-    if EMA == True and NONEMA == True:
+        sprite_dir = Path("checkpoints") / version / f"sprites_{epoch}_EMA"
+    else:
         model.load_state_dict(checkpoint["model"])
+        sprite_dir = Path("checkpoints") / version / f"sprites_{epoch}"
     
-
-    diffusion = Diffusion(timesteps=1000, device=device)
-
-    sprite_dir = Path("checkpoints") / version / f"sprites_{epoch}"
     print(sprite_dir)
     sprite_dir.mkdir(parents=True, exist_ok=True)
-    for i in range(15):
+
+    diffusion = Diffusion(timesteps=1000, device=device)
+    for i in range(20):
         samples = sample(model, diffusion, device, n=4)
 
         save_image(samples, Path(sprite_dir / f"i_{i}generated.png"), nrow=2)
