@@ -35,10 +35,11 @@ if __name__ == "__main__":
     model = UNet().to(device)
 
     # epoch = cfg["training"]["epochs"] - 1
-    epoch = "best"
-    checkpoint_path = Path("checkpoints") / version / f"epoch_{epoch}.pth"
-    checkpoint_path = Path("checkpoints") / version / "last.pth"
-    checkpoint_path = Path("checkpoints") / version / "best.pth"
+    epoch = "best_t"
+    checkpoint_path = Path("checkpoints") / version / f"{epoch}.pth"
+    # checkpoint_path = Path("checkpoints") / version / f"epoch_{epoch}.pth"
+    # checkpoint_path = Path("checkpoints") / version / "last.pth"
+    # checkpoint_path = Path("checkpoints") / version / "best_t.pth"
     checkpoint = torch.load(
         checkpoint_path,
         map_location=device
@@ -56,9 +57,28 @@ if __name__ == "__main__":
     sprite_dir.mkdir(parents=True, exist_ok=True)
 
     diffusion = Diffusion(timesteps=1000, device=device)
-    for i in range(20):
-        samples = sample(model, diffusion, device, n=4)
 
-        save_image(samples, Path(sprite_dir / f"i_{i}generated.png"), nrow=2)
+    def ddpm_sample(n):
+        for i in range(n):
+            samples = sample(model, diffusion, device, n=4)
 
-        print(f"Saved generated image {i}.png into: {sprite_dir}")
+            save_image(samples, Path(sprite_dir / f"i_{i}generated.png"), nrow=2)
+
+            print(f"Saved generated image {i}.png into: {sprite_dir}")
+    
+    def ddim_sample(n):
+        for i in range(n):
+            samples = diffusion.ddim_sample(
+            model=model,
+            shape=(4, 4, 64, 64),
+            device=device,
+            steps=200,
+            eta=1.0,
+            )
+            save_image(samples, Path(sprite_dir / "ddim" / f"i_{i}generated.png"), nrow=2)
+
+            print(f"Saved generated image {i}.png into: {sprite_dir}")
+    
+
+    # ddim_sample(5)
+    ddpm_sample(5) 

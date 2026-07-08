@@ -23,17 +23,17 @@ def train():
 
     # data
     loader = create_dataloader(cfg)
-
+    print("Data Loader created successfully with length: ", len(loader))
     # model
     model = UNet().to(device)
     optimizer = optim.Adam(model.parameters(), lr=cfg["optim"]["lr"])
 
     ##### try loading an earlier version
-    version = cfg['experiment']['name']
-    checkpoint_path = checkpoint_dir / "best.pth"
-    checkpoint = torch.load(checkpoint_path)
-    model.load_state_dict(checkpoint["model"])
-    optimizer.load_state_dict(checkpoint["optimizer"])
+    # version = cfg['experiment']['name']
+    # checkpoint_path = checkpoint_dir / "best.pth"
+    # checkpoint = torch.load(checkpoint_path,map_location=device)
+    # model.load_state_dict(checkpoint["model"])
+    # optimizer.load_state_dict(checkpoint["optimizer"])
 
     #EMA
     ema = EMA(model,decay = 0.98)
@@ -45,8 +45,11 @@ def train():
 
     model.train()
     best = 10
+    best_test = 10
     for epoch in range(cfg["training"]["epochs"]):
         pbar = tqdm(loader, desc=f"Epoch {epoch}")
+        epoch_loss = 0.0
+        
         for i, x0 in enumerate(pbar):
             x0 = x0.to(device)
 
@@ -75,13 +78,13 @@ def train():
             ema.update(model)
             loss_value = loss.item()
 
-            if i % 10 ==0:
-                pbar.set_postfix(loss=loss_value)
-            if i % 25 ==0:
-                pbar.set_postfix(loss=loss_value)
-            if i % 50 == 0:
-                print(f"{version} Epoch {epoch} Step {i} Loss {loss.item():.4f}")
-        if loss.item() < best and epoch > 85:
+            if i % 2 ==0:
+                pbar.set_postfix(loss=f"{loss_value:.4f}")
+
+            epoch_loss += loss.item()
+        epoch_loss /= len(loader)
+        pbar.set_postfix(avg_loss=f"{epoch_loss:.4f}")
+        if epoch_loss < best and epoch > 300:
             torch.save(
                 {
                     "model": model.state_dict(),
@@ -89,14 +92,23 @@ def train():
                     "ema":ema.ema_model.state_dict()
                     },checkpoint_dir / f"best.pth")
             print(f"Saved checkpoint for epoch {epoch} as best")
-            best = loss.item()
-        if loss.item() < 0.005: #conditioned on loss
+            best = epoch_loss
+        if loss.item() < best_test and epoch > 300:
             torch.save(
                 {
                     "model": model.state_dict(),
                     "optimizer": optimizer.state_dict(),
                     "ema":ema.ema_model.state_dict()
-                    },checkpoint_dir / f"epoch_{epoch}.pth")
+                    },checkpoint_dir / f"best_t.pth")
+            print(f"Saved checkpoint for epoch {epoch} as best_t")
+            best_test = loss.item()
+        if epoch_loss < 0.003 and epoch > 300: #conditioned on loss
+            torch.save(
+                {
+                    "model": model.state_dict(),
+                    "optimizer": optimizer.state_dict(),
+                    "ema":ema.ema_model.state_dict()
+                    },checkpoint_dir / f"{epoch}.pth")
             print(f"Saved checkpoint for epoch {epoch} loss = {loss.item():.4f}")
     torch.save(
             {

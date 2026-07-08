@@ -9,7 +9,7 @@ image:
   channels: 4
 
 experiment:
-  name: "simpleUNet_v3_attn"
+  name: "simpleUNet_v4_1"
 
 training:
   batch_size: 16
