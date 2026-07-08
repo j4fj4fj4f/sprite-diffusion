@@ -82,8 +82,10 @@ class SelfAttention(nn.Module):
         k = k.view(B,C,H*W)                #                   -> B,C,HW
         v = v.view(B,C,H*W).transpose(1,2) #                   -> B,HW,C
 
-        attn = torch.bmm(q,k) #B,HW,C * B,C,HW -> B,HW,HW
-        attn = F.softmax(attn,dim=1)
+        # attn = torch.bmm(q,k) #B,HW,C * B,C,HW -> B,HW,HW
+        attn = torch.bmm(q,k) / (C**0.5)    #makes softmax "softer" amd follows original formula
+        # attn = F.softmax(attn,dim=1)
+        attn = F.softmax(attn,dim=-1)
 
         out = torch.bmm(attn,v) ##B,HW,HW * B,HW,C -> B,HW,C
         out = out.transpose(1,2).view(B,C,H,W) #B,HW,C->B,C,HW->B,C,H,W

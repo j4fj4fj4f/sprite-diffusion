@@ -24,11 +24,11 @@ class Diffusion:
         self.timesteps = timesteps
         self.device = device
 
-        # # linear beta schedule
-        # self.betas = torch.linspace(beta_start, beta_end, timesteps).to(device)
+        # linear beta schedule
+        self.betas = torch.linspace(beta_start, beta_end, timesteps).to(device)
 
-        #cosine beta schedulee
-        self.betas = cosine_beta_schedule(timesteps).to(device)
+        # #cosine beta schedulee
+        # self.betas = cosine_beta_schedule(timesteps).to(device)
 
         self.alphas = 1.0 - self.betas
         self.alpha_bar = torch.cumprod(self.alphas, dim=0)
@@ -61,7 +61,7 @@ class Diffusion:
             x - ((1 - alpha) / torch.sqrt(1 - alpha_bar)) * pred_noise
         )
 
-        return mean + torch.sqrt(beta) * noise
+        return mean + torch.sqrt(beta) * noise  #return xt-1 from xt
 
     @torch.no_grad()
     def ddim_sample(
@@ -125,7 +125,7 @@ class Diffusion:
 
         return x
     
-    
+
     # old sampling mismatched t and noise (but it worked)
     # @torch.no_grad()
     # def p_sample(self, x, t, pred_noise):

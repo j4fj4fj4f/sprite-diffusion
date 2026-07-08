@@ -7,6 +7,23 @@ from src.utils.config import load_config
 
 from pathlib import Path
 
+def get_next_index(folder):
+    existing = list(folder.glob("i_*generated.png"))
+
+    if not existing:
+        return 0
+
+    indices = []
+    for file in existing:
+        # file name example: i_12generated.png
+        name = file.stem  # "i_12generated"
+        idx = name.replace("i_", "").replace("generated", "")
+        try:
+            indices.append(int(idx))
+        except ValueError:
+            pass
+
+    return max(indices) + 1 if indices else 0
 
 def sample(model, diffusion, device, n=4, img_size=64):
     model.eval()
@@ -35,7 +52,7 @@ if __name__ == "__main__":
     model = UNet().to(device)
 
     # epoch = cfg["training"]["epochs"] - 1
-    epoch = "best_t"
+    epoch = "best"
     checkpoint_path = Path("checkpoints") / version / f"{epoch}.pth"
     # checkpoint_path = Path("checkpoints") / version / f"epoch_{epoch}.pth"
     # checkpoint_path = Path("checkpoints") / version / "last.pth"
@@ -59,14 +76,20 @@ if __name__ == "__main__":
     diffusion = Diffusion(timesteps=1000, device=device)
 
     def ddpm_sample(n):
+        last_i = get_next_index(sprite_dir)
+
         for i in range(n):
             samples = sample(model, diffusion, device, n=4)
 
-            save_image(samples, Path(sprite_dir / f"i_{i}generated.png"), nrow=2)
+            save_image(samples, Path(sprite_dir / f"i_{i+last_i}generated.png"), nrow=2)
 
-            print(f"Saved generated image {i}.png into: {sprite_dir}")
+            print(f"Saved generated image {i+last_i}.png into: {sprite_dir}")
     
     def ddim_sample(n):
+        sprite_dir = sprite_dir / "ddim"
+        sprite_dir.mkdir(parents=True, exist_ok=True)
+        last_i = get_next_index(sprite_dir)
+
         for i in range(n):
             samples = diffusion.ddim_sample(
             model=model,
@@ -75,10 +98,11 @@ if __name__ == "__main__":
             steps=200,
             eta=1.0,
             )
-            save_image(samples, Path(sprite_dir / "ddim" / f"i_{i}generated.png"), nrow=2)
 
-            print(f"Saved generated image {i}.png into: {sprite_dir}")
+            save_image(samples, Path(sprite_dir / f"i_{i+last_i}generated.png"), nrow=2)
+
+            print(f"Saved generated image {i+last_i}.png into: {sprite_dir}")
     
 
     # ddim_sample(5)
-    ddpm_sample(5) 
+    ddpm_sample(5)

@@ -1,7 +1,7 @@
 root_dir: "H:/CodeNStuff/Diffusion/sprite-diffusion"
 
 data:
-  #raw_dir: data/raw/sprites
+  # raw_dir: data/raw/sprites
   raw_dir: data/raw/sprites_human
 
 image:
@@ -9,14 +9,18 @@ image:
   channels: 4
 
 experiment:
-  name: "simpleUNet_v4_1"
+  name: "simpleUNet_v4_2_attn_fix"
 
 training:
   batch_size: 16
   num_workers: 2
   shuffle: true
-  epochs: 400
+  epochs: 500
   save_interval: 4
+  save_min_epoch: 400
+
+checkpoint:
+  resume: true
 
 model:
   base_channels: 64
