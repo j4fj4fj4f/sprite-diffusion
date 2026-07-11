@@ -11,6 +11,8 @@ from src.model.ema import EMA
 from pathlib import Path
 from tqdm import tqdm
 from pathlib import Path
+from datetime import datetime
+import shutil
 
 def train():
     cfg = load_config("configs/base.yaml")
@@ -28,21 +30,29 @@ def train():
     model = UNet().to(device)
     optimizer = optim.Adam(model.parameters(), lr=cfg["optim"]["lr"])
 
+    #EMA
+    ema = EMA(model,decay = 0.98)
+
     #### try loading an earlier version
     if cfg["checkpoint"]["resume"]:
         # version = cfg['experiment']['name']
-        checkpoint_path = checkpoint_dir / "best_400.pth"   #checkpoint_path is the loading path
+        checkpoint_path = checkpoint_dir / "best.pth"   #checkpoint_path is the loading path
         if checkpoint_path.exists():
+            # create timestamped backup
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = checkpoint_dir / f"best_backup_{timestamp}.pth"
+            shutil.copy2(checkpoint_path,backup_path)
+            print(f"Backed up checkpoint to: {backup_path}")
+
             checkpoint = torch.load(checkpoint_path,map_location=device)
             model.load_state_dict(checkpoint["model"])
             optimizer.load_state_dict(checkpoint["optimizer"])
+
+            print(f"resumed checkpoint from: {checkpoint_path}")
         else:
             print(f"checkpoint not found: {checkpoint_path}, starting from scratch")
     else:
         print("Training from scratch")
-
-    #EMA
-    ema = EMA(model,decay = 0.98)
 
     # diffusion
     diffusion = Diffusion(timesteps=1000, device=device)
@@ -59,7 +69,7 @@ def train():
         for i, x0 in enumerate(pbar):
             x0 = x0.to(device)
 
-            # # remove alpha if needed
+            # # remove alpha -> using RGB instead of RGBalpa
             # if x0.shape[1] == 4:
             #     x0 = x0[:, :3, :, :]
 
