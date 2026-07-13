@@ -71,4 +71,40 @@ The project starts with unconditional sprite generation before gradually introdu
 
 ## Current Status
 
-🚧 Project initialization
+The project has evolved from a proof-of-concept diffusion model into a solid research framework for generating 64×64 RGBA pixel-art sprites. The current model is capable of producing coherent humanoid characters with recognizable anatomy, hairstyles, facial features, armor, and color schemes.
+
+Recent work focused on improving generation quality through architectural changes, dataset curation, and training stability rather than simply making the model train.
+
+Current achievements include:
+
+Stable DDPM training
+EMA support
+Residual convolution blocks
+Self-attention at the bottleneck
+Larger U-Net architecture
+Resumeable checkpoints
+Dataset refactoring for conditional generation
+Class-conditioned training pipeline (currently being integrated)
+
+The project is now transitioning from unconditional image generation toward controllable sprite generation.
+
+##Current Results
+
+The current unconditional model can reliably generate coherent pixel-art sprites.
+
+Typical generated sprites now exhibit:
+
+✓ centered heads
+✓ correctly positioned arms
+✓ two legs
+✓ eyes
+✓ hairstyles
+✓ torso separation
+✓ consistent sprite silhouette
+✓ limited background artifacts
+
+Remaining failure cases include:
+
+occasional malformed limbs or three legs
+mixed armor/body features
+misaligned heads
