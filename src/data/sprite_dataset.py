@@ -7,12 +7,25 @@ from torchvision import transforms
 
 
 class SpriteDataset(Dataset):
-    def __init__(self, image_dir: str):
-        self.image_dir = Path(image_dir)
+    def __init__(self, image_dirs: dict):
+        """
+        image_dirs:
 
-        self.image_paths = sorted(
-            list(self.image_dir.glob("*.png"))
-        )
+        {
+            "sprites_human": 0,
+            "sprites_nightelves": 1,
+            "sprites_orcs": 2
+        }
+        """
+        self.image_paths = []
+        self.labels = []
+
+        for folder,label in image_dirs.items():
+            folder = Path(folder)
+
+            for img_path in sorted(folder.glob("*.png")):
+                self.image_paths.append(img_path)
+                self.labels.append(label)
 
         self.transform = transforms.Compose([
             transforms.ToTensor()
@@ -25,6 +38,7 @@ class SpriteDataset(Dataset):
         image = Image.open(self.image_paths[idx]).convert("RGBA")
 
         image = self.transform(image)
+        label = self.labels[idx]
 
-        return image
+        return image,label
     

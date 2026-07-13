@@ -29,22 +29,17 @@ def test_sinusoidal():
 # -----------------------------
 def test_time_mlp():
     # base = 64 # v1
-    base = 96
+    time_dim = 128
     t = torch.arange(10).float()
 
-    time_mlp = nn.Sequential(
-        SinusoidalPositionEmbeddings(base),
-        nn.Linear(base, base),
-        nn.SiLU(),
-        nn.Linear(base, base),
-    )
+    model = UNet()
 
-    out = time_mlp(t)
+    out = model.time_mlp(t)
 
     print("\n[Time MLP Test]")
     print("shape:", out.shape)
 
-    assert out.shape == (10, base)
+    assert out.shape == (10, time_dim)
 
 
 # -----------------------------
@@ -75,16 +70,16 @@ def test_block():
 
 
 # -----------------------------
-# 4. U-Net test
+# 4. U-Net test with labels
 # -----------------------------
 def test_unet():
     B = 32
     x = torch.randn(B, 4, 64, 64)
     t = torch.randint(0, 1000, (B,))
-    # print(f"t        " ,t)
+    labels = torch.randint(0, 3, (B,))
     model = UNet()
 
-    out = model(x, t)
+    out = model(x, t, labels)
 
     print("\n[UNet Test]")
     print("input:", x.shape)

@@ -10,11 +10,12 @@ from src.utils.config import load_config
 
 
 @torch.no_grad()
-def sample_with_steps(model, diffusion, device, n=4, img_size=64, save_steps=None):
+def sample_with_steps(model, diffusion, device, labels, n=4, img_size=64, save_steps=None):
     model.eval()
 
     # start from pure noise
     x = torch.randn(n, 4, img_size, img_size, device=device)
+    labels = labels.to(device)
 
     results = []
 
@@ -24,7 +25,7 @@ def sample_with_steps(model, diffusion, device, n=4, img_size=64, save_steps=Non
 
         t_batch = torch.full((n,), t, device=device, dtype=torch.long)
 
-        pred_noise = model(x, t_batch)
+        pred_noise = model(x, t_batch, labels)
 
         x = diffusion.p_sample(x, t_batch, pred_noise)
 
@@ -101,17 +102,31 @@ if __name__ == "__main__":
         999, 900, 800, 700,
         500, 300, 200, 100, 50, 10, 0
     ]
+    
+    classes = cfg["data"]["classes"]
 
-    results = sample_with_steps(
-        model,
-        diffusion,
-        device,
-        n=4,
-        img_size=64,
-        save_steps=save_steps
-    )
+    for class_name, class_id in classes.items():
 
-    out_path = out_dir / "trajectory.png"
-    save_plot(results, out_path)
+        print(f"Generating {class_name}...")
 
-    print(f"Saved timestep visualization to {out_path}")
+        labels = torch.full(
+            (4,),
+            class_id,
+            dtype=torch.long,
+        )
+
+        results = sample_with_steps(
+            model,
+            diffusion,
+            device,
+            labels=labels,
+            n=4,
+            img_size=64,
+            save_steps=save_steps,
+        )
+
+        out_path = out_dir / f"{class_name}_trajectory.png"
+
+        save_plot(results, out_path)
+
+        print(f"Saved timestep visualization to {out_path}")

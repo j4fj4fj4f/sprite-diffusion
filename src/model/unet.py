@@ -108,6 +108,12 @@ class UNet(nn.Module):
             nn.Linear(time_dim, time_dim),
         )
 
+        # class conditioning
+        self.class_embedding = nn.Embedding(
+            num_embeddings=3,
+            embedding_dim=time_dim
+        )
+
         # encoder
         self.conv1 = Block(in_channels, base, time_dim)
         self.conv2 = Block(base, base * 2, time_dim)
@@ -131,9 +137,13 @@ class UNet(nn.Module):
         # pooling
         self.pool = nn.MaxPool2d(2)
 
-    def forward(self, x, t):
+    def forward(self, x, t, labels):
         t = t.long()
-        t = self.time_mlp(t)
+        time_emb = self.time_mlp(t)
+        class_emb = self.class_embedding(labels)
+
+        #add both embeddings up
+        t = time_emb + class_emb
 
         # encoder
         x1 = self.conv1(x, t)          # 64x64

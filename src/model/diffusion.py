@@ -69,6 +69,7 @@ class Diffusion:
         model,
         shape,
         device,
+        labels,
         steps=100,
         eta=0.0,
     ):
@@ -98,7 +99,7 @@ class Diffusion:
             alpha_bar = self.alpha_bar[t].view(-1,1,1,1)
             alpha_bar_next = self.alpha_bar[t_next].view(-1,1,1,1)
 
-            pred_noise = model(x, t)
+            pred_noise = model(x, t, labels)
 
             # predicted x0
             x0 = (

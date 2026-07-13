@@ -10,7 +10,6 @@ from src.model.ema import EMA
 
 from pathlib import Path
 from tqdm import tqdm
-from pathlib import Path
 from datetime import datetime
 import shutil
 
@@ -66,8 +65,9 @@ def train():
         pbar = tqdm(loader, desc=f"Epoch {epoch}")
         epoch_loss = 0.0
         
-        for i, x0 in enumerate(pbar):
+        for i, (x0, labels) in enumerate(pbar):
             x0 = x0.to(device)
+            labels = labels.to(device)
 
             # # remove alpha -> using RGB instead of RGBalpa
             # if x0.shape[1] == 4:
@@ -83,7 +83,7 @@ def train():
             xt = diffusion.q_sample(x0, t, noise)
 
             # predict noise
-            pred_noise = model(xt, t)
+            pred_noise = model(xt, t, labels)
 
             loss = mse(pred_noise, noise)
 
@@ -109,16 +109,17 @@ def train():
                     },checkpoint_dir / f"best.pth")
             print(f"Saved checkpoint for epoch {epoch} as best")
             best = epoch_loss
-        if loss.item() < best_test and epoch > (cfg["training"]["save_min_epoch"]):     #saves the model based on the best loss per example (fix to check inside loop)
+
+        if epoch_loss < 0.003 and epoch > (cfg["training"]["save_min_epoch"]): #conditioned on loss
             torch.save(
                 {
                     "model": model.state_dict(),
                     "optimizer": optimizer.state_dict(),
                     "ema":ema.ema_model.state_dict()
-                    },checkpoint_dir / f"best_t.pth")
-            print(f"Saved checkpoint for epoch {epoch} as best_t")
-            best_test = loss.item()
-        if epoch_loss < 0.003 and epoch > (cfg["training"]["save_min_epoch"]): #conditioned on loss
+                    },checkpoint_dir / f"{epoch}.pth")
+            print(f"Saved checkpoint for epoch {epoch} loss = {loss.item():.4f}")
+        
+        if (epoch % cfg["training"]["save_interval"]) == 0 and epoch > (cfg["training"]["save_min_epoch"]):
             torch.save(
                 {
                     "model": model.state_dict(),

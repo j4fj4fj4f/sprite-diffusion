@@ -25,20 +25,21 @@ def get_next_index(folder):
 
     return max(indices) + 1 if indices else 0
 
-def sample(model, diffusion, device, n=4, img_size=64):
+def sample(model, diffusion, device, labels, n=4, img_size=64):
     model.eval()
 
     with torch.no_grad():
 
         # start from random noise
         x = torch.randn(n, 4, img_size, img_size, device=device)
+        labels = labels.to(device)
 
         # reverse diffusion
         for t in reversed(range(diffusion.timesteps)):
 
             t_batch = torch.full((n,), t, device=device, dtype=torch.long)
 
-            pred_noise = model(x, t_batch)
+            pred_noise = model(x, t_batch ,labels)
 
             x = diffusion.p_sample(x, t_batch, pred_noise)
 
@@ -75,15 +76,28 @@ if __name__ == "__main__":
 
     diffusion = Diffusion(timesteps=1000, device=device)
 
-    def ddpm_sample(n):
-        last_i = get_next_index(sprite_dir)
+
+    def ddpm_sample(class_name,n):
+        class_id = cfg["data"]["classes"][class_name]
+
+        labels = torch.full(
+        (4,),
+        class_id,
+        dtype=torch.long,
+        device=device
+        )
+
+        class_dir = sprite_dir / class_name
+        class_dir.mkdir(parents=True, exist_ok=True)
+
+        last_i = get_next_index(class_dir)
 
         for i in range(n):
-            samples = sample(model, diffusion, device, n=4)
+            samples = sample(model, diffusion, device, labels, n=4)
 
-            save_image(samples, Path(sprite_dir / f"i_{i+last_i}generated.png"), nrow=2)
+            save_image(samples, Path(class_dir / f"i_{i+last_i}generated.png"), nrow=2)
 
-            print(f"Saved generated image {i+last_i}.png into: {sprite_dir}")
+            print(f"Saved generated image {i+last_i}generated.png into: {class_dir}")
     
     def ddim_sample(n):
         sprite_dir = sprite_dir / "ddim"
@@ -103,6 +117,8 @@ if __name__ == "__main__":
 
             print(f"Saved generated image {i+last_i}.png into: {sprite_dir}")
     
-
     # ddim_sample(5)
-    ddpm_sample(5)
+
+    classes = cfg["data"]["classes"]
+    for class_name in classes:
+        ddpm_sample(class_name,5)

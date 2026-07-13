@@ -1,14 +1,16 @@
 from torch.utils.data import DataLoader
 from src.data.sprite_dataset import SpriteDataset
 from src.utils.paths import get_project_root
-
+from src.utils.config import load_config
 
 def create_dataloader(cfg):
     root = get_project_root()
+    class_dirs = {}
+    
+    for folder,label in cfg["data"]["classes"].items():
+        class_dirs[root/ cfg["data"]["root_dir"] / folder] = label
 
-    dataset_path = root / cfg["data"]["raw_dir"]
-
-    dataset = SpriteDataset(dataset_path)
+    dataset = SpriteDataset(class_dirs)
 
     dataloader = DataLoader(
         dataset,
@@ -22,3 +24,10 @@ def create_dataloader(cfg):
     )
 
     return dataloader
+
+if __name__ == "__main__":
+    root = get_project_root()
+    print(root)
+    cfg = load_config(root/"configs"/"base.yaml")
+    dataloader = create_dataloader(cfg)
+    print(type(dataloader))
