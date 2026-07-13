@@ -48,9 +48,9 @@ The project starts with unconditional sprite generation before gradually introdu
 - [x] Validation sampling
 
 ### Phase 5 — Conditional Generation
-- [ ] Class conditioning
+- [x] Class conditioning
 - [ ] Attribute conditioning
-- [ ] Conditional sampling
+- [x] Conditional sampling
 
 ### Phase 6 — Text Conditioning
 - [ ] Prompt encoder
